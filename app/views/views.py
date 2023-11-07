@@ -196,3 +196,57 @@ app.add_url_rule(
     "/category/<category_id>",
     view_func=CategoriesAPI.as_view("category_for_id"),
 )
+
+class PostsAPI(MethodView):
+    def get(self, post_id=None):
+        if post_id is None:
+            posts = Post.query.all()
+            result = PostSchema(exclude=("id",)).dump(posts, many=True)
+        else:
+            post = Post.query.get(post_id)
+            result = PostSchema(exclude=("id",)).dump(post)
+        return (jsonify(result), 200)
+
+    def post(self):
+        post_json = PostSchema().load(request.json)
+        title = post_json.get("title")
+        content = post_json.get("content")
+        date = post_json.get("date")
+        author_id = post_json.get("author_id")
+        category_id = post_json.get("category_id")
+        nuevo_post = Post(
+            title=title,
+            content=content,
+            date=date,
+            author_id=author_id,
+            category_id=category_id,
+        )
+        db.session.add(nuevo_post)
+        db.session.commit()
+        return (jsonify(f"Nuevo Post agregado: {title}"), 201)
+
+    def put(self, post_id):
+        post = Post.query.get(post_id)
+        post_json = PostSchema().load(request.json)
+        title = post_json.get("title")
+        content = post_json.get("content")
+        category_id = post_json.get("category_id")
+        if title is not None:
+            post.title = title
+        if content is not None:
+            post.content = content
+        if category_id is not None:
+            post.category_id = category_id
+
+        db.session.commit()
+        return (jsonify(f"Publicación editada: {post.title}"), 201)
+
+    def delete(self, post_id):
+        post = Post.query.get(post_id)
+        db.session.delete(post)
+        db.session.commit()
+        return (jsonify(mensaje=f"Eliminaste el Post: {post}"), 200)
+
+
+app.add_url_rule("/post", view_func=PostsAPI.as_view("post"))
+app.add_url_rule("/post/<post_id>", view_func=PostsAPI.as_view("post_for_id"))
