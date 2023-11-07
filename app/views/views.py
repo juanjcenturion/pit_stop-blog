@@ -278,3 +278,24 @@ app.add_url_rule("/comment", view_func=CommentAPI.as_view("comment"))
 app.add_url_rule(
     "/comment/<comment_id>", view_func=CommentAPI.as_view("comment_for_id")
 )
+
+
+class registerView(MethodView):
+    def get(self):
+        return render_template("register.html")
+
+    def post(self):
+        username = request.form["username"]
+        password = request.form["password"]
+        password_hash = generate_password_hash(
+            password, method="pbkdf2", salt_length=16
+        )
+        nuevo_usuario = User(username=username, password_hash=password_hash)
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        return render_template("register.html")
+
+
+app.add_url_rule("/register", view_func=registerView.as_view("register"))
+
