@@ -197,6 +197,7 @@ app.add_url_rule(
     view_func=CategoriesAPI.as_view("category_for_id"),
 )
 
+
 class PostsAPI(MethodView):
     def get(self, post_id=None):
         if post_id is None:
@@ -250,3 +251,30 @@ class PostsAPI(MethodView):
 
 app.add_url_rule("/post", view_func=PostsAPI.as_view("post"))
 app.add_url_rule("/post/<post_id>", view_func=PostsAPI.as_view("post_for_id"))
+
+
+class CommentAPI(MethodView):
+    def post(self):
+        comment_json = CommentSchema().load(request.json)
+        content = comment_json.get("content")
+        date = comment_json.get("date")
+        author_id = comment_json.get("author_id")
+        post_id = comment_json.get("post_id")
+        new_comment = Comment(
+            content=content, date=date, author_id=author_id, post_id=post_id
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+        return (jsonify(f"Nuevo comentario agregado: {content}"), 201)
+
+    def delete(self, comment_id):
+        comment = Comment.query.get(comment_id)
+        db.session.delete(comment)
+        db.session.commit()
+        return (jsonify(f"Eliminaste el Comentario: {comment}"), 200)
+
+
+app.add_url_rule("/comment", view_func=CommentAPI.as_view("comment"))
+app.add_url_rule(
+    "/comment/<comment_id>", view_func=CommentAPI.as_view("comment_for_id")
+)
