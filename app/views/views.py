@@ -29,7 +29,6 @@ from app.schemas.schemas import (
 )
 
 
-# ADD STATUS CODE HTTP
 class UsersAPI(MethodView):
     @jwt_required()
     def get(self, user_id=None):
@@ -136,3 +135,64 @@ class UsersAPI(MethodView):
 
 app.add_url_rule("/user", view_func=UsersAPI.as_view("user"))
 app.add_url_rule("/user/<user_id>", view_func=UsersAPI.as_view("user_for_id"))
+
+
+class CategoriesAPI(MethodView):
+    def get(self, category_id=None):
+        if category_id is None:
+            categories = Category.query.all()
+            result = CategorySchema(exclude=("id",)).dump(categories, many=True)
+
+        else:
+            category = Category.query.get(category_id)
+            posts = Post.query.filter_by(category_id=category_id).all()
+            post_schemas = []
+            for post in posts:
+                post_schema = PostSchema(
+                    exclude=(
+                        "id",
+                        "content",
+                        "author_id",
+                        "category_id",
+                        "date",
+                    )
+                ).dump(post)
+                post_schemas.append(post_schema)
+
+            result = {
+                "category": CategorySchema(exclude=("id",)).dump(category),
+                "posts": post_schemas,
+            }
+        return (jsonify(result), 200)
+
+    def post(self):
+        category_json = CategorySchema().load(request.json)
+        name = category_json.get("name")
+        new_category = Category(name=name)
+        db.session.add(new_category)
+        db.session.commit()
+        return (
+            jsonify(f"Nueva Categoria agregada: {new_category}"),
+            201,
+        )
+
+    def put(self, category_id):
+        category = Category.query.get(category_id)
+        category_json = CategorySchema().load(request.json)
+        name = category_json.get("name")
+        category.name = name
+        db.session.commit()
+        return (jsonify(f"Nombre de categoria cambiado a: {name}"), 201)
+
+    def delete(self, category_id):
+        category = Category.query.get(category_id)
+        db.session.delete(category)
+        db.session.commit()
+        return (jsonify(mensaje=f"Borraste la categoria: {category}"), 200)
+
+
+app.add_url_rule("/category", view_func=CategoriesAPI.as_view("category"))
+app.add_url_rule(
+    "/category/<category_id>",
+    view_func=CategoriesAPI.as_view("category_for_id"),
+)
