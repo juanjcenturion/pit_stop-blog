@@ -299,3 +299,23 @@ class registerView(MethodView):
 
 app.add_url_rule("/register", view_func=registerView.as_view("register"))
 
+
+@app.route("/login")
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+
+    user = User.query.filter_by(username=username).first()
+
+    # Check(contrasenia guardada, contrasenia recibida)
+    if user and check_password_hash(user.password_hash, password):
+        access_token = create_access_token(
+            identity=username,
+            expires_delta=timedelta(days=10),
+            additional_claims={
+                "is_admin": user.is_admin,
+            },
+        )
+        return jsonify({"ok": access_token})
+    return jsonify(error="no se puede generar el token"), 400
