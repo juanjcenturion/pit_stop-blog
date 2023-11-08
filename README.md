@@ -24,7 +24,7 @@ git clone https://github.com/juanjcenturion/pit_stop-blog.git
 
 3. Ejecuta la aplicacion con Docker Compose, esto creará contenedores para la aplicacion Flask y una Base de datos MySQL:
 ```
-docker-compose up -d
+sudo docker-compose up -d
 ```
 
 ### Template:
