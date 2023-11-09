@@ -3,6 +3,9 @@
 echo 'sleep 10 secs'
 sleep 10
 
+python init/database_variable.py
+
+
 echo 'run db script'
 # Define the number of retries
 
