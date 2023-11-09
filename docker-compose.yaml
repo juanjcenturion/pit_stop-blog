@@ -24,9 +24,15 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}  # Create a database named 'mydatabase'
       MYSQL_USER: ${MYSQL_USER} # Create a MySQL user 'myuser'
       MYSQL_PASSWORD: ${MYSQL_PASSWORD} # Set the password for 'myuser'
-    volumes:
-      - ./.data/db:/var/lib/mysql
     ports:
       - "3307:3306"  # Map host port 3306 to container port 3306 for MySQL
+    command: --init-file /docker-entrypoint-initdb.d/create_schema.sql
     restart: always  # Restarts the MySQL container if it stops or crashes
-    container_name: mysql_database
+    container_name: ${MYSQL_CONTAINER_NAME}
+    volumes:
+      - ./.data/db:/var/lib/mysql
+      - ./init:/docker-entrypoint-initdb.d/
+
+
+volumes:
+  db_data:
